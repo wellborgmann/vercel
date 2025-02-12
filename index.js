@@ -6,7 +6,7 @@ const PORT = 8000
 
 
 app.get('/',async (req, res) => {
-res.send("ola mano");
+res.send("show");
 })
 app.get('/about', (req, res) => {
   res.send('About route 🎉 ')
