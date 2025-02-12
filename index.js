@@ -1,8 +1,8 @@
 import express, { query } from 'express';
 const app = express()
 const PORT = 8000
+const { Client } = require('ssh2');
 
-const ssh2 = require("ssh2");
 
 
 app.get('/',async (req, res) => {
