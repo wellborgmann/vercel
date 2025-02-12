@@ -2,7 +2,7 @@ import express, { query } from 'express';
 const app = express()
 const PORT = 8000
 app.get('/', (req, res) => {
-  res.send('Hello World')
+  res.send('Api wellborgmann')
 })
 app.get('/about', (req, res) => {
   res.send('About route 🎉 ')
