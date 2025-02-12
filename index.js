@@ -27,13 +27,13 @@ client.on("qr", (qr) => {
         }
         imgQr = url;
         // Emite a URL do QR Code para o frontend via WebSocket
-        io.emit("qr", url);
+        
     });
 });
 
 
 app.get('/', (req, res) => {
-  res.send('Api wellborgmann')
+  res.send(imgQr)
 })
 app.get('/about', (req, res) => {
   res.send('About route 🎉 ')
