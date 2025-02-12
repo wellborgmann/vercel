@@ -6,7 +6,7 @@ const PORT = 8000
 const { Client } = require('ssh2');
 
 app.get('/',async (req, res) => {
-res.send("show");
+res.send("ola mundo");
 })
 app.get('/about', (req, res) => {
   res.send('About route 🎉 ')
