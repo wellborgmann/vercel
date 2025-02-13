@@ -64,7 +64,14 @@ app.get('/', async (req, res) => {
         ssh.dispose();
 
         if (exists) {
-            res.send(`Usuário encontrado: ${data}`);
+              const validade = formatDate(data);
+            const dias = diferencaEmDias(data);
+            
+            const user = {
+                validade: validade,
+                dias: dias}
+            res.json.send(user);
+            
         } else {
             res.send('Usuário não encontrado.');
         }
@@ -73,6 +80,28 @@ app.get('/', async (req, res) => {
         res.status(500).send("Erro interno do servidor.");
     }
 });
+
+function formatDate(inputDate) {
+  // Cria um objeto Date a partir da string
+  const date = new Date(inputDate);
+
+  // Obtemos o dia, o mês e o ano
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Lembre-se que os meses começam de 0
+  const year = date.getFullYear();
+
+  // Retorna a data no formato dd/mm/yyyy
+  return `${day}/${month}/${year}`;
+}
+
+function diferencaEmDias(dataISO) {
+    const dataTimestamp = new Date(dataISO);
+    const dataAtual = new Date();
+    const diferencaMilissegundos = dataTimestamp.getTime() - dataAtual.getTime();
+    return Math.round(diferencaMilissegundos / (1000 * 60 * 60 * 24));
+}
+
+// Exemplo de uso
 
 
 
