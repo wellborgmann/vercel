@@ -208,29 +208,39 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/download', async (req, res) => {
+// Middleware para verificar se a URL foi fornecida
+app.use('/download', (req, res, next) => {
   const targetUrl = req.query.url;
 
   if (!targetUrl) {
     return res.status(400).send("A URL de destino não foi fornecida.");
   }
 
-  console.log(`Requisitando a URL: ${targetUrl}`); // Log da URL recebida
+  req.proxyUrl = targetUrl; // Armazenando a URL fornecida para ser usada no próximo middleware
+  next();
+});
+
+// Middleware para fazer o download da URL fornecida
+app.use('/download', async (req, res) => {
+  const targetUrl = req.proxyUrl;
+  console.log(`Requisitando a URL: ${targetUrl}`);
 
   try {
+    // Definindo o agente HTTP ou HTTPS com base no tipo da URL
     const agent = targetUrl.startsWith('https') ? new https.Agent({ rejectUnauthorized: false }) : new http.Agent();
 
+    // Fazendo a requisição de download
     const response = await axios.get(targetUrl, {
       responseType: 'stream', // Usando stream para download
-      httpAgent: agent, // Define o agente para http ou https conforme o link
+      httpAgent: agent, // Usando o agente apropriado
     });
 
-    // Configura os headers de resposta conforme os dados recebidos
+    // Configurando os cabeçalhos para o cliente
     res.setHeader('Content-Type', response.headers['content-type']);
     res.setHeader('Content-Length', response.headers['content-length']);
     res.setHeader('Transfer-Encoding', 'chunked');
-    
-    // Pipe do stream de dados para o cliente
+
+    // Transmitindo o conteúdo para o cliente
     response.data.pipe(res);
   } catch (error) {
     console.error(`Erro ao acessar a URL de destino: ${error.message}`);
