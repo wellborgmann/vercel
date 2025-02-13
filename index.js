@@ -2,6 +2,10 @@ import express from 'express';
 import { NodeSSH } from 'node-ssh';
 
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import { _extend } from 'util';
+if (_extend) {
+  global._extend = Object.assign;
+}
 import axios from 'axios';
 import http from 'http';
 import https from 'https';
