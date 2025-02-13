@@ -1,6 +1,7 @@
 import express from 'express';
 import { NodeSSH } from 'node-ssh';
 import pkg from 'whatsapp-web.js';
+const { Client, LocalAuth } = pkg;
 const app = express();
 const PORT = 8000;
 
