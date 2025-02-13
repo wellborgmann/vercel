@@ -1,7 +1,9 @@
 import express from 'express';
 import { NodeSSH } from 'node-ssh';
 
+import axios from 'axios';
 
+import cors from 'cors';
 
 const app = express();
 const PORT = 8000;
@@ -101,6 +103,88 @@ function diferencaEmDias(dataISO) {
     return Math.round(diferencaMilissegundos / (1000 * 60 * 60 * 24));
 }
 
+
+app.get("/proxy",permissao, async (req, res) => {
+  const targetUrl = req.query.url;
+
+  if (!targetUrl) {
+    return res.status(400).json({ error: "URL is required" });
+  }
+
+  try {
+    new URL(targetUrl); // Verifica se a URL é válida
+  } catch (err) {
+    return res.status(400).json({ error: "Invalid URL" });
+  }
+
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+  };
+
+  if (req.headers.range) {
+    headers["Range"] = req.headers.range;
+  }
+
+  const axiosInstance = axios.create({
+    maxRedirects: 10, // Ajuste conforme necessário
+    headers: headers,
+    httpAgent: new http.Agent({ keepAlive: true, maxSockets: 100 }),
+    httpsAgent: new https.Agent({ keepAlive: true, maxSockets: 100 }),
+  });
+
+  const fetchContent = async (url, retryCount = 3) => {
+    try {
+      console.log(`Fetching URL: ${url}`);
+      const response = await axiosInstance.get(url, {
+        responseType: "stream",
+        validateStatus: (status) => status < 400,
+      });
+
+      // Ensure the correct headers are passed to the client
+      if (!res.headersSent) {
+        const responseHeaders = {
+          ...response.headers,
+          "Accept-Ranges": "bytes", // Enable range requests
+          "Content-Type": response.headers["content-type"] || "video/mp4", // Ensure content-type is set
+        };
+        res.writeHead(response.status, responseHeaders);
+      }
+
+      response.data.pipe(res);
+
+      response.data.on("data", (chunk) => {
+       // console.log(`Streaming chunk of size: ${chunk.length}`);
+      });
+
+      response.data.on("end", () => {
+        console.log("Stream ended");
+        res.end(); // Force end the response
+      });
+
+      response.data.on("error", (err) => {
+        console.error("Stream error:", err.message);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Error streaming content" });
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching content:", error.message);
+      if (error.response && error.response.status === 404) {
+        res.status(404).json({ error: "Content not found" });
+      } else if (retryCount > 0) {
+        console.log(`Retrying... (${3 - retryCount + 1}/3)`);
+        await fetchContent(url, retryCount - 1);
+      } else {
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Error fetching content" });
+        }
+      }
+    }
+  };
+
+  await fetchContent(targetUrl);
+});
 // Exemplo de uso
 
 
