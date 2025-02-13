@@ -1,12 +1,25 @@
-import { WAConnection } from '@adiwajshing/baileys';
+import makeWASocket, { useMultiFileAuthState } from '@adiwajshing/baileys';
 import fs from 'fs';
 
-const conn = new WAConnection();
+async function connectToWhatsApp() {
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
 
-conn.on('open', () => {
-    console.log('Credentials updated!');
-    const authInfo = conn.base64EncodedAuthInfo();
-    fs.writeFileSync('./auth_info.json', JSON.stringify(authInfo, null, '\t'));
-});
+    const sock = makeWASocket({
+        auth: state,
+        printQRInTerminal: true,
+    });
 
-conn.connect();
+    sock.ev.on('creds.update', saveCreds);
+    
+    sock.ev.on('connection.update', (update) => {
+        const { connection, lastDisconnect } = update;
+        if (connection === 'close') {
+            console.log('Conexão fechada, tentando reconectar...');
+            connectToWhatsApp();
+        } else if (connection === 'open') {
+            console.log('Conectado ao WhatsApp!');
+        }
+    });
+}
+
+connectToWhatsApp();
