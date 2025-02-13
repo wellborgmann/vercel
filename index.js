@@ -51,8 +51,9 @@ app.get('/', async (req, res) => {
         // Conecta ao SSH dentro da rota
         await connectSSH();
         const login = req.query?.user;
-        if(!login){
-             res.send('Usuário não encontrado.');
+        if (!login) {
+            ssh.dispose(); // Fecha a conexão se não for utilizada
+            return res.send('Usuário não encontrado.');
         }
         const { data, exists } = await checkLoginExists(login);
         
@@ -69,6 +70,7 @@ app.get('/', async (req, res) => {
         res.status(500).send("Erro interno do servidor.");
     }
 });
+
 
 
 
