@@ -48,7 +48,14 @@ async function checkLoginExists(loginName) {
 // Rota principal
 app.get('/', async (req, res) => {
     try {
+        // Conecta ao SSH dentro da rota
+        await connectSSH();
+        
         const { data, exists } = await checkLoginExists("apollo404");
+        
+        // Opcional: fechar a conexão se não for reutilizar
+        ssh.dispose();
+
         if (exists) {
             res.send(`Usuário encontrado: ${data}`);
         } else {
@@ -59,6 +66,7 @@ app.get('/', async (req, res) => {
         res.status(500).send("Erro interno do servidor.");
     }
 });
+
 
 // Rota adicional
 app.get('/about', (req, res) => {
