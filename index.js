@@ -104,7 +104,7 @@ function diferencaEmDias(dataISO) {
 }
 
 
-app.get("/proxy",permissao, async (req, res) => {
+app.get("/proxy", async (req, res) => {
   const targetUrl = req.query.url;
 
   if (!targetUrl) {
