@@ -2,7 +2,7 @@ import makeWASocket, { useMultiFileAuthState } from '@adiwajshing/baileys';
 import fs from 'fs';
 
 async function connectToWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState('./auth_info');
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info/auth_info.json');
 
     const sock = makeWASocket({
         auth: state,
