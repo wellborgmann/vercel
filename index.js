@@ -1,6 +1,7 @@
 import express from 'express';
 import { NodeSSH } from 'node-ssh';
 
+import { createProxyMiddleware } from 'http-proxy-middleware';
 import axios from 'axios';
 import http from 'http';
 import https from 'https';
@@ -191,6 +192,53 @@ app.get("/proxy", async (req, res) => {
 
 
 
+
+
+const app = express();
+
+app.use("/download", (req, res, next) => {
+  const targetUrl = req.query.url;
+
+  if (!targetUrl) {
+    return res.status(400).send("A URL de destino não foi fornecida.");
+  }
+
+  req.proxyUrl = targetUrl;
+  next();
+});
+
+app.use(
+  "/download",
+  createProxyMiddleware({
+    changeOrigin: true,
+    followRedirects: true, // Garante que os redirecionamentos sejam seguidos
+    pathRewrite: (path, req) => {
+      // Reescreve o caminho removendo o "/download"
+      const newPath = req.proxyUrl.replace(/^\/download/, "");
+      return newPath;
+    },
+    router: (req) => {
+      // Define a URL de destino dinamicamente
+      return req.proxyUrl;
+    },
+    onError(err, req, res) {
+      // Log de erro (caso haja algum problema no proxy)
+      console.error(`Erro no proxy para a URL ${req.proxyUrl}: ${err.message}`);
+      res.status(500).send('Erro ao acessar a URL de destino.');
+    },
+    headers: {
+      // Pode ser útil adicionar cabeçalhos como User-Agent para evitar bloqueios
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
+      'Accept-Encoding': 'gzip, deflate, br',
+    },
+    maxRedirects: 5, // Limita o número de redirecionamentos para evitar loops infinitos
+  })
+);
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Servidor rodando em http://localhost:${port}`);
+});
 
 
 
