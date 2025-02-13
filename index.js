@@ -70,7 +70,7 @@ app.get('/', async (req, res) => {
             const user = {
                 validade: validade,
                 dias: dias}
-            res.json.send(user);
+            res.json(user);
             
         } else {
             res.send('Usuário não encontrado.');
