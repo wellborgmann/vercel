@@ -195,7 +195,6 @@ app.get("/proxy", async (req, res) => {
 
 
 
-
 app.get('/download', async (req, res) => {
   const targetUrl = req.query.url;
 
@@ -203,27 +202,32 @@ app.get('/download', async (req, res) => {
     return res.status(400).send("A URL de destino não foi fornecida.");
   }
 
+  console.log(`Requisitando a URL: ${targetUrl}`); // Log da URL recebida
+
   try {
-    // Fazer uma requisição para a URL de destino usando axios
+    const agent = targetUrl.startsWith('https') ? new https.Agent({ rejectUnauthorized: false }) : new http.Agent();
+
     const response = await axios.get(targetUrl, {
-      responseType: 'stream',
-      httpsAgent: targetUrl.startsWith('https') ? new https.Agent({ rejectUnauthorized: false }) : undefined,
-      httpAgent: targetUrl.startsWith('http') ? new http.Agent() : undefined,
+      responseType: 'stream', // Usando stream para download
+      httpAgent: agent, // Define o agente para http ou https conforme o link
     });
 
-    // Definir os cabeçalhos para o cliente
+    // Configura os headers de resposta conforme os dados recebidos
     res.setHeader('Content-Type', response.headers['content-type']);
     res.setHeader('Content-Length', response.headers['content-length']);
     res.setHeader('Transfer-Encoding', 'chunked');
     
-    // Stream dos dados do destino para o cliente
+    // Pipe do stream de dados para o cliente
     response.data.pipe(res);
   } catch (error) {
     console.error(`Erro ao acessar a URL de destino: ${error.message}`);
+    if (error.response) {
+      console.error(`Status do erro: ${error.response.status}`);
+      console.error(`Detalhes do erro: ${error.response.data}`);
+    }
     res.status(500).send('Erro ao acessar a URL de destino.');
   }
 });
-
 
 
 // Inicia o servidor e a conexão SSH
