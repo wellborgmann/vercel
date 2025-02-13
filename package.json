@@ -15,7 +15,7 @@
     "puppeteer": "^21.3.8",
     "puppeteer-core": "^21.3.8",
       "whatsapp-web.js": "^1.26.0",
-    "@adiwajshing/baileys": "^9.0.0"
+     "@adiwajshing/baileys": "^5.0.0"
 
     
   }
