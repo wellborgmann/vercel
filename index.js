@@ -10,10 +10,11 @@ const ssh = new NodeSSH();
 async function connectSSH() {
     try {
         await ssh.connect({
-            host: '157.254.54.234',
-            port:22,
-            username: 'root',
-            password: '7093dado7093'
+     host: process.env.IP_SSH,
+    port: 22,
+    username: process.env.USER_SSH,
+    password: process.env.PASS_SSH,
+    readyTimeout: 30000,
         });
         console.log('🔗 Conectado ao SSH com sucesso!');
     } catch (error) {
