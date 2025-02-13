@@ -1,62 +1,69 @@
-import express, { query } from 'express';
-const app = express()
-const PORT = 8000
+import express from 'express';
+import { NodeSSH } from 'node-ssh';
 
+const app = express();
+const PORT = 8000;
 
-ssh.connect({
-  host: '157.254.54.234',
-  username: 'root',
-  password: "7093dado7093"
-})
+const ssh = new NodeSSH();
 
-const {NodeSSH} = require('node-ssh')
-
-const ssh = new NodeSSH()
-
-  async function executeSSHCommand(command) {
-       let comando = `chage -l apollo404 | grep -E 'Account expires' | cut -d ' ' -f3-`;
-
-        await ssh.execCommand(comando, { cwd:'/var/www' }).then(function(result) {
-            try{  
-                console.log('STDOUT: ' + result.stdout);
-                  return result.stdout;
-            }catch(error){
-               console.log('STDERR: ' + result.stderr);
-            }
-          
-  
- 
-  })
-  }
-
-  async function checkLoginExists(loginName) {
-    let comando = `chage -l ${loginName} | grep -E 'Account expires' | cut -d ' ' -f3-`;
-
+// Função assíncrona para conectar ao SSH antes de executar comandos
+async function connectSSH() {
     try {
-        const dataReceived = await executeSSHCommand(comando);
-        return {
-            exists: !!dataReceived, // Se houver dados, o usuário existe
-            data: dataReceived || null
-        };
+        await ssh.connect({
+            host: '157.254.54.234',
+            username: 'root',
+            password: '7093dado7093'
+        });
+        console.log('🔗 Conectado ao SSH com sucesso!');
     } catch (error) {
-        console.error("Erro ao verificar login:", error);
-        return { exists: false };
+        console.error('❌ Erro ao conectar ao SSH:', error);
     }
 }
 
+// Função para executar comandos no SSH
+async function executeSSHCommand(command) {
+    try {
+        const result = await ssh.execCommand(command, { cwd: '/var/www' });
+        return result.stdout.trim(); // Retorna a saída sem espaços extras
+    } catch (error) {
+        console.error('Erro ao executar comando SSH:', error);
+        return null;
+    }
+}
 
-app.get('/',async (req, res) => {
- try {
-   const {data, exists} = checkLoginExists("apollo404");
-   res.send(data);
-  } catch (error) {
-   res.send("erro")
- }
+// Função para verificar se o login existe
+async function checkLoginExists(loginName) {
+    const comando = `chage -l ${loginName} | grep -E 'Account expires' | cut -d ' ' -f3-`;
+    const dataReceived = await executeSSHCommand(comando);
 
-})
+    return {
+        exists: !!dataReceived, // Se houver dados, o usuário existe
+        data: dataReceived || null
+    };
+}
+
+// Rota principal
+app.get('/', async (req, res) => {
+    try {
+        const { data, exists } = await checkLoginExists("apollo404");
+        if (exists) {
+            res.send(`Usuário encontrado: ${data}`);
+        } else {
+            res.send('Usuário não encontrado.');
+        }
+    } catch (error) {
+        console.error("Erro na rota /:", error);
+        res.status(500).send("Erro interno do servidor.");
+    }
+});
+
+// Rota adicional
 app.get('/about', (req, res) => {
-  res.send('About route 🎉 ')
-})
-app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-})
+    res.send('About route 🎉');
+});
+
+// Inicia o servidor e a conexão SSH
+app.listen(PORT, async () => {
+    console.log(`✅ Servidor rodando na porta ${PORT}`);
+    await connectSSH();
+});
