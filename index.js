@@ -3,52 +3,30 @@ const app = express()
 const PORT = 8000
 
 
-const { Client } = require('ssh2');
+ssh.connect({
+  host: '157.254.54.234',
+  username: 'root',
+  password: "7093dado7093"
+})
 
-const connSettings = {
-    host: 157.254.54.234,
-    port: 22,
-    username: "root",
-    password: "7093dado7093",
-    readyTimeout: 30000,
-  };
+const {NodeSSH} = require('node-ssh')
+
+const ssh = new NodeSSH()
 
   async function executeSSHCommand(command) {
-      return retry(async (bail) => {
-          return new Promise((resolve, reject) => {
-              const conn = new Client();
-              let dataReceived = "";
+       let comando = `chage -l apollo404 | grep -E 'Account expires' | cut -d ' ' -f3-`;
+
+        await ssh.execCommand(comando, { cwd:'/var/www' }).then(function(result) {
+            try{  
+                console.log('STDOUT: ' + result.stdout);
+                  return result.stdout;
+            }catch(error){
+               console.log('STDERR: ' + result.stderr);
+            }
+          
   
-              conn.on("error", (err) => {
-                  console.error("Erro na conexão SSH:", err);
-                  conn.end();
-                  bail(err); 
-              });
-  
-              conn.on("ready", () => {
-                  conn.exec(command, (err, stream) => {
-                      if (err) {
-                          conn.end();
-                          return reject(err);
-                      }
-                      stream
-                          .on("close", () => {
-                              conn.end();
-                              resolve(dataReceived.trim());
-                          })
-                          .on("data", (data) => {
-                              dataReceived += data.toString();
-                          })
-                          .stderr.on("data", (data) => {
-                              console.error("STDERR:", data.toString());
-                          });
-                  });
-              }).connect(connSettings);
-          });
-      }, {
-          retries: 3,
-          minTimeout: 2000,
-      });
+ 
+  })
   }
 
   async function checkLoginExists(loginName) {
