@@ -1,6 +1,6 @@
 import express from 'express';
 import { NodeSSH } from 'node-ssh';
-
+import pkg from 'whatsapp-web.js';
 const app = express();
 const PORT = 8000;
 
@@ -74,12 +74,85 @@ app.get('/', async (req, res) => {
 
 
 
+const client = new Client({
+    authStrategy: new LocalAuth({
+        clientId: "client-2",
+        dataPath: "./",
+    }),
+    puppeteer: {
+
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--log-level=3',
+            '--no-default-browser-check',
+            '--disable-site-isolation-trials',
+            '--no-experiments',
+            '--ignore-gpu-blacklist',
+            '--ignore-certificate-errors',
+            '--ignore-certificate-errors-spki-list',
+            '--disable-gpu',
+            '--disable-extensions',
+            '--disable-default-apps',
+            '--enable-features=NetworkService',
+            '--disable-setuid-sandbox',
+            '--no-sandbox',
+            '--disable-webgl',
+            '--disable-threaded-animation',
+            '--disable-threaded-scrolling',
+            '--disable-in-process-stack-traces',
+            '--disable-histogram-customizer',
+            '--disable-gl-extensions',
+            '--disable-composited-antialiasing',
+            '--disable-canvas-aa',
+            '--disable-3d-apis',
+            '--disable-accelerated-2d-canvas',
+            '--disable-accelerated-jpeg-decoding',
+            '--disable-accelerated-mjpeg-decode',
+            '--disable-app-list-dismiss-on-blur',
+            '--disable-accelerated-video-decode'
+          ],
+        executablePath: '/usr/bin/google-chrome',
+
+
+    },
+});
+let imgQr;
+
+client.on("qr", (qr) => {
+    qrcode.toDataURL(qr, (err, url) => {
+        if (err) {
+            console.error("Erro ao gerar QR Code:", err);
+            return;
+        }
+        imgQr = url;
+        // Emite a URL do QR Code para o frontend via WebSocket
+  
+    });
+});
+
+app.get("/qr", (req, res) => {
+    res.send(imgQr);
+});
+
+client.on("message_create", async (msg) => {
+
+console.log(msg.body);
+
+});
+
 
 // Rota adicional
 app.get('/about', (req, res) => {
   
     res.send('About route 🎉');
 });
+
+try {
+    await client.initialize();
+} catch (error) {
+    console.log("errorWW", error)
+}
 
 // Inicia o servidor e a conexão SSH
 app.listen(PORT, async () => {
