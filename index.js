@@ -196,6 +196,9 @@ app.get("/proxy", async (req, res) => {
 
 
 
+
+
+// Middleware para capturar e configurar a URL do proxy
 app.use("/download", (req, res, next) => {
   const targetUrl = req.query.url;
 
@@ -207,6 +210,7 @@ app.use("/download", (req, res, next) => {
   next();
 });
 
+// Configuração do Proxy
 app.use(
   "/download",
   createProxyMiddleware({
@@ -227,7 +231,7 @@ app.use(
       res.status(500).send('Erro ao acessar a URL de destino.');
     },
     headers: {
-      // Pode ser útil adicionar cabeçalhos como User-Agent para evitar bloqueios
+      // Cabeçalhos customizados para evitar bloqueios
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
       'Accept-Encoding': 'gzip, deflate, br',
     },
@@ -235,10 +239,11 @@ app.use(
   })
 );
 
-const port = 3000;
-app.listen(port, () => {
-  console.log(`Servidor rodando em http://localhost:${port}`);
-});
+// Iniciar o servidor na porta 3000
+
+
+
+
 
 
 
