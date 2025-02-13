@@ -194,11 +194,6 @@ app.get("/proxy", async (req, res) => {
 
 
 
-
-
-
-
-// Middleware para capturar e configurar a URL do proxy
 app.use("/download", (req, res, next) => {
   const targetUrl = req.query.url;
 
