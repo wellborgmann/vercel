@@ -51,7 +51,9 @@ app.get('/', async (req, res) => {
         // Conecta ao SSH dentro da rota
         await connectSSH();
         const login = req.query?.user;
-        if(!login)return
+        if(!login){
+             res.send('Usuário não encontrado.');
+        }
         const { data, exists } = await checkLoginExists(login);
         
         // Fecha a conexão após executar os comandos
