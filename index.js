@@ -53,7 +53,7 @@ app.get('/', async (req, res) => {
         
         const { data, exists } = await checkLoginExists("apollo404");
         
-        // Opcional: fechar a conexão se não for reutilizar
+        // Fecha a conexão após executar os comandos
         ssh.dispose();
 
         if (exists) {
@@ -68,6 +68,7 @@ app.get('/', async (req, res) => {
 });
 
 
+
 // Rota adicional
 app.get('/about', (req, res) => {
   
@@ -77,6 +78,4 @@ app.get('/about', (req, res) => {
 // Inicia o servidor e a conexão SSH
 app.listen(PORT, async () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
-    
-    await connectSSH();
 });
