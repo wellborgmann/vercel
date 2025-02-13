@@ -62,11 +62,13 @@ app.get('/', async (req, res) => {
 
 // Rota adicional
 app.get('/about', (req, res) => {
+  
     res.send('About route 🎉');
 });
 
 // Inicia o servidor e a conexão SSH
 app.listen(PORT, async () => {
     console.log(`✅ Servidor rodando na porta ${PORT}`);
+    
     await connectSSH();
 });
