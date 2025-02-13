@@ -196,63 +196,33 @@ app.get("/proxy", async (req, res) => {
 
 
 
-
-
-app.use("/download", (req, res, next) => {
+app.get('/download', async (req, res) => {
   const targetUrl = req.query.url;
 
   if (!targetUrl) {
     return res.status(400).send("A URL de destino não foi fornecida.");
   }
 
-  req.proxyUrl = targetUrl;
-  next();
-});
+  try {
+    // Fazer uma requisição para a URL de destino usando axios
+    const response = await axios.get(targetUrl, {
+      responseType: 'stream',
+      httpsAgent: targetUrl.startsWith('https') ? new https.Agent({ rejectUnauthorized: false }) : undefined,
+      httpAgent: targetUrl.startsWith('http') ? new http.Agent() : undefined,
+    });
 
-// Middleware para fazer o proxy das requisições
-app.use("/download", (req, res) => {
-  const targetUrl = req.proxyUrl;
-
-  // Fazendo o parse da URL de destino
-  const parsedUrl = url.parse(targetUrl);
-
-  // Seleciona o protocolo correto
-  const protocol = parsedUrl.protocol === 'https:' ? https : http;
-
-  // Configura as opções para a requisição
-  const options = {
-    hostname: parsedUrl.hostname,
-    port: parsedUrl.port || (parsedUrl.protocol === 'https:' ? 443 : 80),
-    path: parsedUrl.path,
-    method: req.method,
-    headers: {
-      ...req.headers, // Copia os cabeçalhos da requisição original
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36',
-    }
-  };
-
-  // Faz a requisição para o servidor de destino
-  const proxyRequest = protocol.request(options, (proxyResponse) => {
-    // Define os cabeçalhos da resposta
-    res.writeHead(proxyResponse.statusCode, proxyResponse.headers);
-
-    // Encaminha os dados recebidos da URL de destino para a resposta original
-    proxyResponse.pipe(res);
-  });
-
-  // Em caso de erro, retorna erro 500
-  proxyRequest.on('error', (err) => {
-    console.error(`Erro ao acessar a URL de destino ${targetUrl}: ${err.message}`);
+    // Definir os cabeçalhos para o cliente
+    res.setHeader('Content-Type', response.headers['content-type']);
+    res.setHeader('Content-Length', response.headers['content-length']);
+    res.setHeader('Transfer-Encoding', 'chunked');
+    
+    // Stream dos dados do destino para o cliente
+    response.data.pipe(res);
+  } catch (error) {
+    console.error(`Erro ao acessar a URL de destino: ${error.message}`);
     res.status(500).send('Erro ao acessar a URL de destino.');
-  });
-
-  // Encaminha o corpo da requisição (se houver)
-  req.pipe(proxyRequest);
+  }
 });
-
-
-
-
 
 
 
