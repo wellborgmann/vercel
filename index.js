@@ -11,19 +11,22 @@ async function connectSSH() {
     try {
         await ssh.connect({
             host: '157.254.54.234',
+            port:80,
             username: 'root',
             password: '7093dado7093'
         });
         console.log('🔗 Conectado ao SSH com sucesso!');
     } catch (error) {
         console.error('❌ Erro ao conectar ao SSH:', error);
+        process.exit(1); // Encerra o programa se a conexão falhar
     }
 }
+
 
 // Função para executar comandos no SSH
 async function executeSSHCommand(command) {
     try {
-        const result = await ssh.execCommand(command, { cwd: '/var/www' });
+        const result = await ssh.execCommand(command, { cwd: '/' });
         return result.stdout.trim(); // Retorna a saída sem espaços extras
     } catch (error) {
         console.error('Erro ao executar comando SSH:', error);
