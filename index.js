@@ -3,7 +3,7 @@ import fs from 'fs';
 
 async function connectToWhatsApp() {
     // Usando caminho relativo ou sem especificar diretório
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info.json');
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info.json');
 
     const sock = makeWASocket({
         auth: state,
