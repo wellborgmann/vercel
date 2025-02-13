@@ -11,7 +11,7 @@ async function connectSSH() {
     try {
         await ssh.connect({
             host: '157.254.54.234',
-            port:80,
+            port:22,
             username: 'root',
             password: '7093dado7093'
         });
