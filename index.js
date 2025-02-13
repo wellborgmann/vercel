@@ -209,48 +209,52 @@ app.use((req, res, next) => {
 });
 
 // Middleware para verificar se a URL foi fornecida
-app.use('/download', (req, res, next) => {
-  const targetUrl = req.query.url;
+// api/download.js
 
-  if (!targetUrl) {
-    return res.status(400).send("A URL de destino não foi fornecida.");
-  }
 
-  req.proxyUrl = targetUrl; // Armazenando a URL fornecida para ser usada no próximo middleware
-  next();
-});
+import path from 'path';
 
-// Middleware para fazer o download da URL fornecida
-app.use('/download', async (req, res) => {
-  const targetUrl = req.proxyUrl;
-  console.log(`Requisitando a URL: ${targetUrl}`);
+export default async function handler(req, res) {
+  // Verifique o método da requisição
+  if (req.method === 'GET') {
+    const { fileUrl } = req.query; // URL do arquivo que você deseja baixar
 
-  try {
-    // Definindo o agente HTTP ou HTTPS com base no tipo da URL
-    const agent = targetUrl.startsWith('https') ? new https.Agent({ rejectUnauthorized: false }) : new http.Agent();
-
-    // Fazendo a requisição de download
-    const response = await axios.get(targetUrl, {
-      responseType: 'stream', // Usando stream para download
-      httpAgent: agent, // Usando o agente apropriado
-    });
-
-    // Configurando os cabeçalhos para o cliente
-    res.setHeader('Content-Type', response.headers['content-type']);
-    res.setHeader('Content-Length', response.headers['content-length']);
-    res.setHeader('Transfer-Encoding', 'chunked');
-
-    // Transmitindo o conteúdo para o cliente
-    response.data.pipe(res);
-  } catch (error) {
-    console.error(`Erro ao acessar a URL de destino: ${error.message}`);
-    if (error.response) {
-      console.error(`Status do erro: ${error.response.status}`);
-      console.error(`Detalhes do erro: ${error.response.data}`);
+    if (!fileUrl) {
+      return res.status(400).json({ error: 'URL do arquivo não fornecida' });
     }
-    res.status(500).send('Erro ao acessar a URL de destino.');
+
+    try {
+      // Solicita o arquivo usando o axios com redirecionamento habilitado
+      const response = await axios({
+        method: 'GET',
+        url: fileUrl,
+        responseType: 'stream', // Faz o download do arquivo como stream
+        maxRedirects: 10, // Limita o número de redirecionamentos (opcional)
+      });
+
+      // Defina o cabeçalho de Content-Disposition para que o navegador baixe o arquivo
+      const fileName = path.basename(fileUrl); // Nome do arquivo com base na URL
+      res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+      res.setHeader('Content-Type', response.headers['content-type']); // Tipo do conteúdo
+
+      // Envie o arquivo para o cliente
+      response.data.pipe(res); // Use o pipe para redirecionar o stream de dados
+
+    } catch (error) {
+      console.error('Erro ao fazer o download do arquivo:', error);
+      if (error.response) {
+        // Se a resposta do erro contém algo, enviar esse erro
+        res.status(error.response.status).json({ error: error.response.statusText });
+      } else {
+        res.status(500).json({ error: 'Falha ao fazer o download do arquivo' });
+      }
+    }
+  } else {
+    // Se o método não for GET, retorne um erro
+    res.status(405).json({ error: 'Método não permitido' });
   }
-});
+}
+
 
 
 // Inicia o servidor e a conexão SSH
