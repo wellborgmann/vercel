@@ -212,7 +212,6 @@ app.use((req, res, next) => {
 // api/download.js
 
 
-import path from 'path';
 
 export default async function handler(req, res) {
   // Verifique o método da requisição
