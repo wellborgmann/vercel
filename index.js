@@ -2,6 +2,7 @@ import express from 'express';
 import { NodeSSH } from 'node-ssh';
 import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth } = pkg;
+import chromium from 'chrome-aws-lambda';
 const app = express();
 const PORT = 8000;
 
@@ -113,7 +114,8 @@ const client = new Client({
             '--disable-app-list-dismiss-on-blur',
             '--disable-accelerated-video-decode'
           ],
-        headless: true,
+         executablePath: await chromium.executablePath, // Caminho do Chromium fornecido pelo chrome-aws-lambda
+        headless: chromium.headless,
 
 
     },
