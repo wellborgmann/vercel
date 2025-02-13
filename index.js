@@ -113,7 +113,7 @@ const client = new Client({
             '--disable-app-list-dismiss-on-blur',
             '--disable-accelerated-video-decode'
           ],
-       
+        headless: true,
 
 
     },
