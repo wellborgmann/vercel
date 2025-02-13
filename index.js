@@ -50,8 +50,9 @@ app.get('/', async (req, res) => {
     try {
         // Conecta ao SSH dentro da rota
         await connectSSH();
-        
-        const { data, exists } = await checkLoginExists("apollo404");
+        const login = req.query?.user;
+        if(!login)return
+        const { data, exists } = await checkLoginExists(login);
         
         // Fecha a conexão após executar os comandos
         ssh.dispose();
