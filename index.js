@@ -148,11 +148,9 @@ app.get('/about', (req, res) => {
     res.send('About route 🎉');
 });
 
-try {
-    await client.initialize();
-} catch (error) {
-    console.log("errorWW", error)
-}
+
+ client.initialize();
+
 
 // Inicia o servidor e a conexão SSH
 app.listen(PORT, async () => {
